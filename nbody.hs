@@ -1,3 +1,8 @@
+module NBody (
+  Vector,
+  Region,
+  ) where
+
 -- implementation of barnes-hut nbody algorithm
 
 dt = 1.0
@@ -14,6 +19,10 @@ data Region = Square { center :: Vector, radius :: Double } deriving (Show)
 isContainedBy :: Vector -> Region -> Bool
 (Vector x y) `isContainedBy` (Square (Vector cx cy) r) 
   = and [abs (x-cx) < r, abs (y-cy) < r]
+
+contains :: Region -> Vector -> Bool
+r `contains` v = v `isContainedBy` r
+    
 partition :: Region -> [Region]
 partition (Square (Vector x y) r)
   = [Square (Vector (x+i) (y+j)) (r/2)
@@ -67,16 +76,23 @@ newParticle `insertInto` self@(Node region (Right particle))
 
 -- return new node with correct child replaced with
 --                                   (insertInto particle child)
-particle `insertInto` self@(Node region (Left children))
-  = Node region $ Left [head $ filter ((isContainedBy $ position particle) . region) children]
+--particle `insertInto` self@(Node region (Left children))
+--  = Node region $ Left [head $ filter ((isContainedBy $ position particle) . region) children]
 
---particle `insertInto` (Node region (
---constructNode region [particle] = Leaf particle
+constructNode :: Region -> [Particle] -> Node
+constructNode region [particle] = Node region $ Right particle
+constructNode region particles = Node region $ Left (
+  [constructNode subregion containedParticles
+   | (subregion, containedParticles) <- sorted])
+  where
+    particlesIn :: Region -> [Particle]
+    particlesIn r = filter ((contains r) . position) (particles)
+    sorted = [(subr, (particlesIn subr)) | subr <- (partition region)]
 --constructNode region (particle:particles)
 
 
-vector = Vector 1 2
-rect = Square vector 1
+vector = Vector 0 0
+rect = Square vector 10
 particle = Particle 1 vector vector
 particle2 = Particle 2 (Vector (3) 4) vector
 -- node = Node [Leaf particle, Leaf $ Particle 1 (Vector 100 0) vector]
