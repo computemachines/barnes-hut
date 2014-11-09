@@ -10,60 +10,61 @@ instance Num Vector where
 Vector x y `multScalar` c = Vector (x*c) (y*c)
 Vector x y `divScalar` c = Vector (x/c) (y/c)
 
---  abs (Vector x y) = Vector abs x abs y
---  signum (Vector x y) = Vector 0::Double 0::Double
-data Region = Rect { center :: Vector, radius :: Double }
+data Region = Square { center :: Vector, radius :: Double } deriving (Show)
+isContainedBy :: Vector -> Region -> Bool
+(Vector x y) `isContainedBy` (Square (Vector cx cy) r) 
+  = and [abs (x-cx) < r, abs (y-cy) < r]
+partition :: Region -> [Region]
+partition (Square (Vector x y) r)
+  = [Square (Vector (x+i) (y+j)) (r/2)
+    | i <- [-1,1], j <- [-1,1]]
 
-data Particle = Particle{ mass :: Double,
-                          position :: Vector,
-                          velocity :: Vector }
-                | PseudoParticle { mass :: Double,
-                                   position :: Vector }
-              deriving (Show)
+class PseudoParticle a where
+  mass :: a -> Double
+  position :: a -> Vector
 
-instance Num Particle where
-  PseudoParticle m1 p1 + PseudoParticle m2 p2 =
-    PseudoParticle (m1+m2) (p1+p2)
+data Particle = Particle Double Vector Vector deriving (Show)
 
-average :: [Particle] -> Particle
-average [] = error ""
-average [particle] = particle
-average particles 
-  = PseudoParticle avmass avpos
-  where
-    tmass = (sum (map mass particles))
-    weightedPosition particle
-      = (position particle) `multScalar` (mass particle)
-    avpos = (foldl1 (+) (map weightedPosition particles)) `divScalar` tmass
-    avmass = tmass / (fromIntegral $ length particles)
-  
+instance PseudoParticle Particle where
+  mass (Particle m _ _) = m
+  position (Particle _ p _) = p
 
-data Node = Leaf Particle
-          | Empty
-          | Node { children :: [Node] }
-          deriving (Show)
+velocity :: Particle -> Vector
+velocity (Particle _ _ v) = v
 
-pseudo :: Particle -> Particle
-pseudo (Particle m pos _) = PseudoParticle m pos
+data Node = Node { region :: Region, children :: Either [Node] Particle }
+            deriving (Show)
 
-centerOfMass :: Node -> Particle
-centerOfMass Empty = PseudoParticle 0 $ Vector 0 0
-centerOfMass (Leaf particle) = pseudo particle
-centerOfMass (Node children)
-  = average (map centerOfMass children)
---centerOfMass (Leaf particle) = 
+-- pseudoparticle node represents total mass and center of mass
+instance PseudoParticle Node where
+  mass (Node _ (Left children)) = sum $ map mass children
+  mass (Node _ (Right particle)) = mass particle
+
+  position (Node _ (Right particle)) = position particle
+  position node@(Node _ (Left children))
+    = foldl1 (+) [weightedPosition pseudoParticle
+                 | pseudoParticle <- children]
+    where
+      weightedPosition particle
+        = (position particle) `multScalar` ((mass particle)/(mass node))
 
 stepParticle :: Particle -> Vector -> Particle
-stepParticle (Particle { mass = m, position = pos, velocity = vel }) force
-  = Particle { mass = m,
-               position = pos + vel `multScalar` dt,
-               velocity = vel + acc `multScalar` dt }
+stepParticle (Particle m pos vel) force
+  = Particle m (pos + vel `multScalar` dt) (vel + acc `multScalar` dt)
   where
     acc = force `divScalar` m
 
-constructNode :: Region -> [Particle] -> Node
-constructNode rect [particle] = Leaf particle
+insertInto :: Particle -> Node -> Node
+particle `insertInto` (Node region (Left [])) = Node region (Right particle)
+--newParticle `insertInto` (Node region (Right particle))
+--  = Node region 
+
+--particle `insertInto` (Node region (
+--constructNode region [particle] = Leaf particle
+--constructNode region (particle:particles)
+
 
 vector = Vector 1 2
+rect = Square vector 1
 particle = Particle 1 vector vector
-node = Node [Leaf particle, Leaf $ Particle 1 (Vector 100 0) vector]
+-- node = Node [Leaf particle, Leaf $ Particle 1 (Vector 100 0) vector]
