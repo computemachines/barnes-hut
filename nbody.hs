@@ -17,7 +17,8 @@ isContainedBy :: Vector -> Region -> Bool
 partition :: Region -> [Region]
 partition (Square (Vector x y) r)
   = [Square (Vector (x+i) (y+j)) (r/2)
-    | i <- [-1,1], j <- [-1,1]]
+    | i <- flipflop, j <- flipflop]
+    where flipflop = [-r/2,r/2]
 
 class PseudoParticle a where
   mass :: a -> Double
@@ -54,10 +55,20 @@ stepParticle (Particle m pos vel) force
   where
     acc = force `divScalar` m
 
+emptyNode region = Node region $ Left []
+
 insertInto :: Particle -> Node -> Node
 particle `insertInto` (Node region (Left [])) = Node region (Right particle)
---newParticle `insertInto` (Node region (Right particle))
---  = Node region 
+newParticle `insertInto` self@(Node region (Right particle))
+  | position newParticle == position particle = self
+  | otherwise = insertInto newParticle $ insertInto particle node
+  where
+    node = Node region $ Left (map emptyNode $ partition region)
+
+-- return new node with correct child replaced with
+--                                   (insertInto particle child)
+particle `insertInto` self@(Node region (Left children))
+  = Node region $ Left [head $ filter ((isContainedBy $ position particle) . region) children]
 
 --particle `insertInto` (Node region (
 --constructNode region [particle] = Leaf particle
@@ -67,4 +78,9 @@ particle `insertInto` (Node region (Left [])) = Node region (Right particle)
 vector = Vector 1 2
 rect = Square vector 1
 particle = Particle 1 vector vector
+particle2 = Particle 2 (Vector (3) 4) vector
 -- node = Node [Leaf particle, Leaf $ Particle 1 (Vector 100 0) vector]
+
+root = emptyNode $ Square (Vector 0 0) 10
+root2 = particle `insertInto` root
+root3 = particle2 `insertInto` root2
