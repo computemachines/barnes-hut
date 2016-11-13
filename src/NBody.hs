@@ -1,7 +1,9 @@
 module NBody (
   Vector(..),
   Region(..),
-  contains
+  contains,
+  partition,
+  magnitude
   ) where
 
 -- implementation of barnes-hut nbody algorithm
@@ -17,6 +19,9 @@ instance Num Vector where
 Vector x y `multScalar` c = Vector (x*c) (y*c)
 Vector x y `divScalar` c = Vector (x/c) (y/c)
 
+magnitude :: Vector -> Double
+magnitude (Vector a b) = sqrt(a*a + b*b)
+
 data Region = Square { center :: Vector, radius :: Double } deriving (Show)
 contains :: Region -> Vector -> Bool
 (Square (Vector cx cy) r) `contains` (Vector x y)
@@ -24,8 +29,7 @@ contains :: Region -> Vector -> Bool
     
 partition :: Region -> [Region]
 partition (Square (Vector x y) r)
-  = [Square (Vector (x+i) (y+j)) (r/2)
-    | i <- flipflop, j <- flipflop]
+  = [Square (Vector (x+i) (y+j)) (r/2) | i <- flipflop, j <- flipflop]
     where flipflop = [-r/2,r/2]
 
 class ParticleLike a where

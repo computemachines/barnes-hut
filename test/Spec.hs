@@ -1,10 +1,9 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 import NBody
 
 import Test.QuickCheck
-
-main :: IO ()
-main = quickCheck prop_RegionContainsCenter
-
+import Test.QuickCheck.All
 
 instance Arbitrary Vector where
   arbitrary = do
@@ -18,6 +17,20 @@ instance Arbitrary Region where
     radius <- arbitrary
     return (Square center (abs radius))
 
+-- deepCheck = quickCheckWith stdArgs { maxSuccess = 1000 }
 
-prop_RegionContainsCenter region@(Square center r)
-  = region `contains` center
+prop_VectorAddId v = v + 0 == v
+prop_VectorMultId v = v * Vector 1 1 == v
+prop_VectorMagPos v = classify (magnitude v == 0) "trivial" $ magnitude v >= 0
+prop_VectorTriangleIneq a b = magnitude (a+b) <= magnitude a + magnitude b
+prop_RegionContainsCenter region@(Square center r) = region `contains` center
+prop_RegionPartitionCover region testVector
+  = classify (not continue) "skips" $ if continue
+    then any (`contains` testVector) $ partition region
+    else True
+  where continue = region `contains` testVector
+
+
+return []
+main :: IO (Bool)
+main = $quickCheckAll
