@@ -4,11 +4,11 @@ synopsis:            Initial project template from stack
 description:         Please see README.md
 homepage:            https://github.com/githubuser/barnes-hut#readme
 license:             BSD3
-license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2016 Author name here
-category:            Web
+-- license-file:        
+author:              Tyler Parker
+maintainer:          computemachines@gmail.com
+copyright:           2016 Tyler Parker
+category:            Physics
 build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
@@ -16,6 +16,7 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Lib
+                     , NBody
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
 
@@ -33,6 +34,7 @@ test-suite barnes-hut-test
   main-is:             Spec.hs
   build-depends:       base
                      , barnes-hut
+                     , QuickCheck
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
