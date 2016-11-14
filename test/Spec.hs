@@ -25,11 +25,7 @@ prop_VectorMagPos v = classify (magnitude v == 0) "trivial" $ magnitude v >= 0
 prop_VectorTriangleIneq a b = magnitude (a+b) <= magnitude a + magnitude b
 prop_RegionContainsCenter region@(Square center r) = region `contains` center
 prop_RegionPartitionCover region testVector
-  = classify (not continue) "skips" $ if continue
-    then any (`contains` testVector) $ partition region
-    else True
-  where continue = region `contains` testVector
-
+  = contains region testVector ==> any (`contains` testVector) $ partition region
 
 return []
 main :: IO (Bool)
