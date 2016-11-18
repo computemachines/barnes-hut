@@ -1,5 +1,7 @@
-module Body (
+module NBody (
   ) where
+
+import Geometric
 
 -- Hierarchical collection of particles 
 
@@ -17,10 +19,10 @@ instance ParticleLike Node where
   mass (Node _ children) = sum . map mass $ children
   
   position node@(Node _ children)
-    = foldl1 (+) . map weightedPosition $ children
+    = foldl1 plus . map weightedPosition $ children
     where
       weightedPosition child
-        = (position child) `multScalar` ((mass child)/(mass node))
+        = ((mass child)/(mass node)) `mult` (position child) 
 
 -- stepParticle :: Particle -> Vector -> Particle
 -- stepParticle (Particle m pos vel) force
