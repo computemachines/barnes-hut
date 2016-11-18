@@ -4,6 +4,7 @@ import Geometric
 import Test.Framework (defaultMain, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck
+import Test.QuickCheck.Test
 
 import Control.Applicative
 
@@ -33,6 +34,11 @@ tests = [
 
 instance Arbitrary Vector where
   arbitrary = Vector <$> arbitrary <*> arbitrary
+
+  shrink (Vector 0 0) = []
+  shrink (Vector 1 1) = []
+  shrink (Vector x y) = [Vector 1 1, Vector 0 0]
+  
 
 instance Arbitrary Region where
   arbitrary = Square <$> arbitrary <*> arbitrary
