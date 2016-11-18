@@ -4,18 +4,13 @@ import NBody
 
 import Test.QuickCheck
 import Test.QuickCheck.All
+import Control.Applicative
 
 instance Arbitrary Vector where
-  arbitrary = do
-    x <- arbitrary
-    y <- arbitrary
-    return (Vector x y)
+  arbitrary = Vector <$> arbitrary <*> arbitrary
 
 instance Arbitrary Region where
-  arbitrary = do
-    center <- arbitrary
-    radius <- arbitrary
-    return (Square center (abs radius))
+  arbitrary = Square <$> arbitrary <*> arbitrary
 
 -- deepCheck = quickCheckWith stdArgs { maxSuccess = 1000 }
 
